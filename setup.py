@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'image_processor = mk_0.image_processor:main',
-            'teleop_mk_0 = mk_0.teleop_mk_0:main'
+            'teleop_mk_0 = mk_0.teleop_mk_0:main',
+            'position_controller = mk_0.position_controller:main',
         ],
     },
 )
