@@ -13,7 +13,6 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
-from rclpy.executors import MultiThreadedExecutor
 
 from geometry_msgs.msg import Point
 from sensor_msgs.msg import LaserScan
@@ -31,20 +30,18 @@ class PositionController(Node):
         self.lidar_sub = self.create_subscription(LaserScan, "/scan", self.lidar_callback, 10)  # 라이다 센서 값
         self.vel_publisher = self.create_publisher(Twist, "/cmd_vel", 10)   # 로봇 이동 속도
 
-        self.pixel_x = 0
         self.direction = 0
         self.distance = 0
         self.min_distance = 0
         self.get_logger().info('Initializing done.')
 
-    # Not used.
-    # 라이다, 카메라 위치를 평행하게 맞추고 난 후에 사용 가능
     def calc_direction(self, x):
         # 방향 계산
         image_width = 1920  # waffle: 1920x1080 (turtlebot3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_waffle/model.sdf:376)
         fov = 58.99    # 1.02974 rad = 58.99976 deg
         self.direction = (x - image_width/2)*fov / image_width # 좌측(- deg), 중앙(0 deg), 우측(+ deg)
         self.get_logger().info(f'Direction: {self.direction} (deg)')
+        self.get_logger().info(f"Interest distance: {self.distance} (m)")
         
     def center_point_callback(self, msg):
         """
@@ -52,14 +49,15 @@ class PositionController(Node):
         """
         self.get_logger().info(f'Got a center point: ({msg.x}, {msg.y})')
         
-        # 물체의 이미지 x 좌표
-        self.pixel_x = msg.x
+        # 물체의 방향 계산
+        # self.direction에 반영
+        self.calc_direction(msg.x)
 
         # 물체가 일정 범위안에 없을 경우 이동
         twist_msg = Twist()
-        delta = self.pixel_x - 960  # 물체의 중심이 정중앙에서 벗어나있는 정도 (픽셀). 960 = 이미지 넓이의 절반 (1920/2)
-        direc_thresh = 10   # 방향 허용 범위. 정중앙에서 +-10 픽셀까지는 중앙으로 봄.
-        distance_thresh = 1 # 거리 허용 범위.
+        delta = msg.x - 960 # 물체의 중심이 정중앙에서 벗어나있는 정도 (픽셀). 960 = 이미지 넓이의 절반 (1920/2)
+        direc_thresh = 10   # 방향 허용 범위 (pxl). 정중앙에서 +-10 픽셀까지는 중앙으로 봄.
+        distance_thresh = 0.5   # 물체와의 목표 거리 (m).
 
         # 회전 운동
         if not (-direc_thresh <= delta <= direc_thresh) :
