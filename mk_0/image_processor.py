@@ -5,7 +5,7 @@
     1. 노드가 실행될 때 detection 모델을 로드.
     2. Object detection을 계속 수행.
     3. 찾는 물체가 발견되면 로봇 정지.
-    4. 로봇의 자세를 제어하는 노드가 동작하도록 신호.
+    4. 물체의 중심좌표를 publish.
 
 """
 
@@ -53,13 +53,10 @@ class ImageProcessor(Node):
         self.get_logger().info('Got an Image. Processing...')
         result = self.model.predict(cv_image_gray, confidence=40, overlap=30)
         if result:
-            self.get_logger().info('Result Found!')
+            self.get_logger().info('Object Detected!')
 
             # Stop the robot by sending a stop command to /cmd_vel topic
-            stop_cmd = Twist()
-            stop_cmd.linear.x = 0.0
-            stop_cmd.angular.z = 0.0
-            self.vel_publisher.publish(stop_cmd)
+            self.vel_publisher.publish(Twist())
             self.get_logger().info('Stopping.')
         
             # Draw bounding boxes and labels on the image
