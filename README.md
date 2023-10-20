@@ -37,3 +37,8 @@ KHU robotics club Hyper's summer project.
     $ ros2 run mk_0 image_processor
     $ ros2 run mk_0 teleop_mk_0
     ```
+
+### 시연 영상
+[mk_0_gazebo](https://github.com/kodogyu/mk_0_gazebo) 패키지에서 수정된 turtlebot3 waffle 모델을 사용하여 시뮬레이션하였습니다.
+
+![mk_0 demo](images/mk_0%20demo.gif)
